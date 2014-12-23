@@ -1,0 +1,42 @@
+{
+  "name": "node-migrate-mongo",
+  "version": "1.0.0",
+  "description": "Migrations for MongoDB",
+  "author": "Good Eggs <open-source@goodeggs.com>",
+  "contributors": [
+    "Bob <bob@zoller.us>",
+    "Alex Gorbatchev <alex.gorbatchev@gmail.com>",
+    "Randy Puro <randypuro@gmail.com>",
+    "Alon Salant <alon@salant.org>",
+    "Adam Hull <adam@hmlad.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "mongo mongoose migrate migrations database"
+  ],
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/goodeggs/node-migrate-mongo.git"
+  },
+  "homepage": "https://github.com/goodeggs/node-migrate-mongo",
+  "bugs": "https://github.com/goodeggs/node-migrate-mongo/issues",
+  "dependencies": {
+    "fibrous": "^0.3.3",
+    "mongoose": "^3.8.21",
+    "slugify": "^0.1.0"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "coffee-script": "^1.8.0",
+    "mocha": "^1.21.5",
+    "sinon": "^1.12.2",
+    "sinon-chai": "^2.6.0"
+  },
+  "scripts": {
+    "compile": "coffee --bare --compile --output lib/ src/",
+    "prepublish": "npm run compile",
+    "pretest": "npm run compile",
+    "test": "mocha"
+  }
+}
