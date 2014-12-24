@@ -14,6 +14,9 @@
   "keywords": [
     "mongo mongoose migrate migrations database"
   ],
+  "bin": {
+    "migrate": "./bin/migrate.js"
+  },
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -23,8 +26,13 @@
   "bugs": "https://github.com/goodeggs/node-migrate-mongo/issues",
   "dependencies": {
     "fibrous": "^0.3.3",
+    "fs-extra": "^0.13.0",
+    "interpret": "^0.3.10",
+    "liftoff": "^1.0.3",
+    "minimist": "^1.1.0",
     "mongoose": "^3.8.21",
-    "slugify": "^0.1.0"
+    "slugify": "^0.1.0",
+    "v8flags": "^1.0.8"
   },
   "devDependencies": {
     "chai": "^1.10.0",

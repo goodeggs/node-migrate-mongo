@@ -1,22 +1,12 @@
-fs = require 'fs'
+fse = require 'fs-extra'
 mongoose = require 'mongoose'
 fibrous = require 'fibrous'
 slugify = require 'slugify'
 
 class Migrate
   constructor: (@opts, @model) ->
-    unless @model?
-      @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
-      connection = mongoose.createConnection @opts.mongo
-
-      schema = new mongoose.Schema
-        name:  type: String, index: true, unique: true, required: true
-        createdAt:  type: Date, default: Date.now
-
-      @model = connection.model 'MigrationVersion', schema, 'migration_versions'
-
+    @opts.path ?= 'migrations'
     @opts.ext ?= 'coffee'
-
     @opts.template ?= """
       module.exports =
         requiresDowntime: FIXME # true or false
@@ -32,13 +22,29 @@ class Migrate
           require('child_process').exec "mongo test --eval \"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\"", ->
             done()
     """
+    @getModel()
+
+  getModel: ->
+    @model ?= do =>
+      @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
+      connection = mongoose.createConnection @opts.mongo
+      process.on 'exit', =>
+        connection.close (err) ->
+          throw err if err?
+
+      schema = new mongoose.Schema
+        name:  type: String, index: true, unique: true, required: true
+        createdAt:  type: Date, default: Date.now
+
+      connection.model 'MigrationVersion', schema, 'migration_versions'
 
   getTemplate: (name) -> @opts.template
 
-  log: ->
+  log: (message) ->
+    console.log message
 
-  error: (msg) ->
-    throw new Error msg
+  error: (err) ->
+    throw err
 
   get: (name) ->
     name = name.replace new RegExp("\.#{@opts.ext}$"), ''
@@ -48,7 +54,7 @@ class Migrate
 
   # Check a migration has been run
   exists: fibrous (name) ->
-    @model.sync.findOne({name})?
+    @getModel().sync.findOne({name})?
 
   test: fibrous (name) ->
     @log "Testing migration `#{name}`"
@@ -63,16 +69,16 @@ class Migrate
     migrations = @sync.pending() if !migrations?
     for name in migrations
       if @sync.exists(name)
-        @error "`#{name}` has already been run"
+        @error new Error "`#{name}` has already been run"
         return false
       migration = @get(name)
       @log "Running migration `#{migration.name}`"
       migration.sync.up()
-      @model.sync.create name: migration.name
+      @getModel().sync.create name: migration.name
     true
 
   down: fibrous ->
-    version = @model.sync.findOne {}, {name: 1}, {sort: 'name': -1}
+    version = @getModel().sync.findOne {}, {name: 1}, {sort: 'name': -1}
     migration = @get(version.name)
     @log "Reversing migration `#{migration.name}`"
     migration.sync.down()
@@ -80,8 +86,8 @@ class Migrate
 
   # Return a list of pending migrations
   pending: fibrous ->
-    filenames = fs.sync.readdir(@opts.path).sort()
-    migrationsAlreadyRun = (mv.name for mv in @model.sync.find())
+    filenames = fse.sync.readdir(@opts.path).sort()
+    migrationsAlreadyRun = (mv.name for mv in @getModel().sync.find())
     names = filenames.map (filename) =>
       return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
       match[1]
@@ -96,7 +102,8 @@ class Migrate
     name = "#{slugify name, '_'}"
     timestamp = (new Date()).toISOString().replace /\D/g, ''
     filename = "#{@opts.path}/#{timestamp}_#{name}.#{@opts.ext}"
-    fs.sync.writeFile filename, @getTemplate name
+    fse.sync.mkdirp @opts.path
+    fse.sync.writeFile filename, @getTemplate name
     filename
 
 module.exports = Migrate

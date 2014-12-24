@@ -1,6 +1,6 @@
 {expect} = chai = require 'chai'
 fibrous = require 'fibrous'
-fs = require 'fs'
+fse = require 'fs-extra'
 sinon = require 'sinon'
 chai.use require 'sinon-chai'
 Migrate = require '../'
@@ -16,6 +16,10 @@ describe 'node-migrate-mongo', ->
   before ->
     opts = path: __dirname
     migrate = new Migrate opts, StubMigrationVersion
+    sinon.stub(migrate, 'log')
+
+  after ->
+    migrate.log.restore()
 
   describe '.get', ->
     migration = null
@@ -47,9 +51,11 @@ describe 'node-migrate-mongo', ->
     migration = null
 
     before fibrous ->
-      migration = test: sinon.spy (cb) -> cb()
-      sinon.stub migrate, 'get', -> migration
-      migrate.sync.test()
+      migration =
+        name: 'migration'
+        test: sinon.stub().yields()
+      sinon.stub(migrate, 'get').returns migration
+      migrate.sync.test('migration')
 
     after ->
       migrate.get.restore()
@@ -63,10 +69,10 @@ describe 'node-migrate-mongo', ->
     before fibrous ->
       migration =
         name: 'pending_migration'
-        up: sinon.spy (cb) -> cb()
-      sinon.stub migrate, 'exists', (name, cb) -> cb null, false
-      sinon.stub migrate, 'get', -> migration
-      sinon.stub StubMigrationVersion, 'create', (args..., cb) -> cb()
+        up: sinon.stub().yields()
+      sinon.stub(migrate, 'exists').yields null, false
+      sinon.stub(migrate, 'get').returns migration
+      sinon.stub(StubMigrationVersion, 'create').yields()
       migrate.sync.one 'pending_migration'
 
     after ->
@@ -87,11 +93,11 @@ describe 'node-migrate-mongo', ->
       before fibrous ->
         migration =
           name: 'pending_migration'
-          up: sinon.spy (cb) -> cb()
-        sinon.stub migrate, 'pending', (cb) -> cb null, ['pending_migration']
-        sinon.stub migrate, 'exists', (name, cb) -> cb null, false
-        sinon.stub migrate, 'get', -> migration
-        sinon.stub StubMigrationVersion, 'create', (args..., cb) -> cb()
+          up: sinon.stub().yields()
+        sinon.stub(migrate, 'pending').yields null, ['pending_migration']
+        sinon.stub(migrate, 'exists').yields null, false
+        sinon.stub(migrate, 'get').returns migration
+        sinon.stub(StubMigrationVersion, 'create').yields()
         migrate.sync.all()
 
       after ->
@@ -110,12 +116,12 @@ describe 'node-migrate-mongo', ->
       before fibrous ->
         migration =
           name: 'existing_migration'
-          up: sinon.spy (cb) -> cb()
-        sinon.stub migrate, 'pending', (cb) -> cb null, ['existing_migration']
-        sinon.stub migrate, 'exists', (name, cb) -> cb null, true
-        sinon.stub migrate, 'get', -> migration
+          up: sinon.stub().yields()
+        sinon.stub(migrate, 'pending').yields null, ['existing_migration']
+        sinon.stub(migrate, 'exists').yields null, true
+        sinon.stub(migrate, 'get').returns migration
         sinon.stub migrate, 'error'
-        sinon.stub StubMigrationVersion, 'create', (args..., cb) -> cb()
+        sinon.stub(StubMigrationVersion, 'create').yields()
         migrate.sync.all()
 
       after ->
@@ -135,19 +141,18 @@ describe 'node-migrate-mongo', ->
         expect(migrate.error).to.have.been.calledOnce
 
   describe '.down', ->
-    migration = null
-    version = null
+    {migration, version} = {}
 
     before fibrous ->
-      migration = down: sinon.spy (cb) -> cb()
-      sinon.stub migrate, 'get', -> migration
+      migration =
+        name: 'migration'
+        down: sinon.stub().yields()
+      sinon.stub(migrate, 'get').returns migration
 
       version =
         name: 'migration'
-        remove: sinon.spy (cb) -> cb()
-
-      sinon.stub StubMigrationVersion, 'findOne', (args..., cb) ->
-        cb null, version
+        remove: sinon.stub().yields()
+      sinon.stub(StubMigrationVersion, 'findOne').yields null, version
 
       migrate.sync.down()
 
@@ -162,42 +167,38 @@ describe 'node-migrate-mongo', ->
       expect(version.remove).to.have.been.calledOnce
 
   describe '.pending', ->
-    pending = null
-    migrate = null
+    {pending} = {}
 
     scenarioForFileExtension = (ext) ->
       before fibrous ->
-        migrate = new Migrate {path: __dirname, ext: ext}, StubMigrationVersion
-
-        sinon.stub fs, 'readdir', (args..., cb) ->
-          cb null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
-
-        sinon.stub StubMigrationVersion, 'find', (args..., cb) ->
-          cb null, [name: 'migration1']
-
-        pending = migrate.sync.pending()
+        migrate2 = new Migrate {path: __dirname, ext: ext}, StubMigrationVersion
+        sinon.stub(fse, 'readdir').yields null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
+        sinon.stub(StubMigrationVersion, 'find').yields null, [name: 'migration1']
+        pending = migrate2.sync.pending()
 
       after ->
-        fs.readdir.restore()
+        fse.readdir.restore()
         StubMigrationVersion.find.restore()
 
       it 'returns pending migrations', fibrous ->
         expect(pending).to.eql ['migration2', 'migration3']
 
-    describe "coffee-script", ->
-      scenarioForFileExtension "coffee"
+    describe 'coffee-script', ->
+      scenarioForFileExtension 'coffee'
 
-    describe "javascript", ->
-      scenarioForFileExtension "js"
+    describe 'javascript', ->
+      scenarioForFileExtension 'js'
 
   describe '.generate', ->
     before fibrous ->
-      sinon.stub fs, 'writeFile', (args..., cb) -> cb()
+      sinon.stub(fse, 'mkdirp').yields()
+      sinon.stub(fse, 'writeFile').yields()
       migrate.sync.generate 'filename'
 
     after ->
-      fs.writeFile.restore()
+      fse.mkdirp.restore()
+      fse.writeFile.restore()
 
     it 'generates migration file', fibrous ->
-      expect(fs.writeFile).to.have.been.calledWithMatch /^.*_filename/, /.+/
+      expect(fse.writeFile).to.have.been.calledWithMatch /^.*_filename/, /.+/
 
