@@ -9,6 +9,7 @@ class StubMigrationVersion
   @find: ->
   @findOne: ->
   @create: ->
+  @distinct: ->
 
 describe 'node-migrate-mongo', ->
   migrate = null
@@ -173,12 +174,12 @@ describe 'node-migrate-mongo', ->
       before fibrous ->
         migrate2 = new Migrate {path: __dirname, ext: ext}, StubMigrationVersion
         sinon.stub(fse, 'readdir').yields null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
-        sinon.stub(StubMigrationVersion, 'find').yields null, [name: 'migration1']
+        sinon.stub(StubMigrationVersion, 'distinct').yields null, ['migration1']
         pending = migrate2.sync.pending()
 
       after ->
         fse.readdir.restore()
-        StubMigrationVersion.find.restore()
+        StubMigrationVersion.distinct.restore()
 
       it 'returns pending migrations', fibrous ->
         expect(pending).to.eql ['migration2', 'migration3']

@@ -29,9 +29,6 @@ class Migrate
     @model ?= do =>
       @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
       connection = mongoose.createConnection @opts.mongo
-      process.on 'exit', =>
-        connection.close (err) ->
-          throw err if err?
 
       schema = new mongoose.Schema
         name:  type: String, index: true, unique: true, required: true
@@ -89,7 +86,7 @@ class Migrate
   # Return a list of pending migrations
   pending: fibrous ->
     filenames = fse.sync.readdir(@opts.path).sort()
-    migrationsAlreadyRun = (mv.name for mv in @getModel().sync.find())
+    migrationsAlreadyRun = @getModel().sync.distinct('name')
     names = filenames.map (filename) =>
       return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
       match[1]
