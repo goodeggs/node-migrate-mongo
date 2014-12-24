@@ -35,8 +35,12 @@ module.exports = (config, argv) ->
           return migrate.error(err) if err?
           process.exit(if success then 0 else 1)
 
+      when 'down'
+        migrate.down (err) ->
+          return migrate.error(err) if err?
+          process.exit(0);
+
       #when 'test'
-      #when 'down'
       #when 'pending'
       #when 'all'
       

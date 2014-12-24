@@ -80,6 +80,7 @@ class Migrate
 
   down: fibrous ->
     version = @getModel().sync.findOne {}, {name: 1}, {sort: 'name': -1}
+    @error new Error("No migrations found!") if not version?
     migration = @get(version.name)
     @log "Reversing migration `#{migration.name}`"
     migration.sync.down()
