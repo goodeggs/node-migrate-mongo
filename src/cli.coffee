@@ -38,7 +38,7 @@ module.exports = (config, argv) ->
       when 'down'
         migrate.down (err) ->
           return migrate.error(err) if err?
-          process.exit(0);
+          process.exit 0
 
       when 'pending'
         migrate.pending (err, pendingNames) ->
@@ -47,9 +47,13 @@ module.exports = (config, argv) ->
           for name in pendingNames
             {requiresDowntime} = migrate.get name
             migrate.log "Migration `#{name}` is pending #{requiresDowntime and "(requires downtime)" or ''}"
-          process.exit(0);
+          process.exit 0
           
-      #when 'all'
+      when 'all'
+        migrate.all (err) ->
+          return migrate.error(err) if err?
+          process.exit 0
+
       #when 'test'
       
   catch err
