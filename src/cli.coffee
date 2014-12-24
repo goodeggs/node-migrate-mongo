@@ -5,7 +5,7 @@ module.exports = (config, argv) ->
     log: config.log or (message) ->
       console.log message
     error: config.error or (err) ->
-      console.error err.printStack and err or err.message
+      console.error err.printStack is false and err.message or err.stack
       process.exit 1
 
   # opts: ext, path, template, mongo
@@ -54,7 +54,11 @@ module.exports = (config, argv) ->
           return migrate.error(err) if err?
           process.exit 0
 
-      #when 'test'
+      when 'test'
+        die('must provide migration name with --name') unless argv.name
+        migrate.test argv.name, (err) ->
+          return migrate.error(err) if err?
+          process.exit 0
       
   catch err
     migrate.error err
