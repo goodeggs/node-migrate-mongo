@@ -1,3 +1,4 @@
+path = require 'path'
 fse = require 'fs-extra'
 mongoose = require 'mongoose'
 fibrous = require 'fibrous'
@@ -19,7 +20,7 @@ class Migrate
 
         test: (done) ->
           console.log 'copying development to test'
-          require('child_process').exec "mongo test --eval \"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\"", ->
+          require('child_process').exec "mongo test --eval \\"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\\"", ->
             done()
     """
     @getModel()
@@ -48,7 +49,7 @@ class Migrate
 
   get: (name) ->
     name = name.replace new RegExp("\.#{@opts.ext}$"), ''
-    migration = require "#{@opts.path}/#{name}"
+    migration = require path.resolve("#{@opts.path}/#{name}")
     migration.name = name
     migration
 
@@ -69,7 +70,7 @@ class Migrate
     migrations = @sync.pending() if !migrations?
     for name in migrations
       if @sync.exists(name)
-        @error new Error "`#{name}` has already been run"
+        @error new Error "Migration `#{name}` has already been run"
         return false
       migration = @get(name)
       @log "Running migration `#{migration.name}`"

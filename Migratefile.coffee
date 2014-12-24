@@ -1,2 +1,2 @@
 module.exports =
-  mongo: 'localhost'
+  mongo: 'localhost/node_migrate_mongo_test'

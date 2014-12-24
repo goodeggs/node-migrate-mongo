@@ -29,7 +29,12 @@ module.exports = (config, argv) ->
           migrate.log "Created `#{filename}`"
           process.exit 0
 
-      #when 'one'
+      when 'one'
+        die('must provide migration name with --name') unless argv.name
+        migrate.one argv.name, (err, success) ->
+          return migrate.error(err) if err?
+          process.exit(if success then 0 else 1)
+
       #when 'test'
       #when 'down'
       #when 'pending'
