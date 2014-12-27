@@ -43,10 +43,12 @@ module.exports = (config, argv) ->
       when 'pending'
         migrate.pending (err, pendingNames) ->
           return migrate.error(err) if err?
-          return migrate.log 'No pending migrations' unless pendingNames.length
-          for name in pendingNames
-            {requiresDowntime} = migrate.get name
-            migrate.log "Migration `#{name}` is pending #{requiresDowntime and "(requires downtime)" or ''}"
+          if pendingNames.length
+            for name in pendingNames
+              {requiresDowntime} = migrate.get name
+              migrate.log "Migration `#{name}` is pending #{requiresDowntime and "(requires downtime)" or ''}"
+          else
+            migrate.log 'No pending migrations'
           process.exit 0
           
       when 'all'
