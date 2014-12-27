@@ -25,6 +25,20 @@ migrate generate --name my_first_migration
 migrate all
 ```
 
+## Migratefile Options
+
+* **beforeTest** -- An async function called before running a migration test.  By default sets `NODE_ENV=test`.
+* **before** -- An async function called before running a command.  Useful for connecting your app to its database.
+* **after** -- An async function called after running a command.
+* **afterTest** -- An async function called after running a migration test.
+* **mongo** -- A string or function that returns a mongo connection string.
+* **model** -- A reference to your custom `MigrationVersion` model.
+* **path** -- The place to store your migration files.  Defaults to `migrations`.
+* **ext** -- The extension for your migration files.  Defaults to `coffee`.
+* **template** -- The template used when generating migrations.
+
+before/after callbacks are called in this order: [ beforeTest, before, after, afterTest ]
+
 ## Contributing
 
 Please follow our [Code of Conduct](https://github.com/goodeggs/mongoose-webdriver/blob/master/CODE_OF_CONDUCT.md)

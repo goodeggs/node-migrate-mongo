@@ -1,4 +1,10 @@
+async = require 'async'
+
 module.exports = (config, argv) ->
+
+  config.beforeTest ?= (cb) ->
+    process.env.NODE_ENV ?= 'test'
+    process.nextTick(cb)
 
   Migrate = require '../'
   class CustomMigrate extends Migrate
@@ -18,50 +24,51 @@ module.exports = (config, argv) ->
     err.printStack = false
     migrate.error(err)
 
-  try
-    command = argv._[0]
+  command = argv._[0]
 
-    switch command
-      when 'generate'
-        die('must provide migration name with --name') unless argv.name
-        migrate.generate argv.name, (err, filename) ->
-          return migrate.error(err) if err?
-          migrate.log "Created `#{filename}`"
-          process.exit 0
+  steps = []
 
-      when 'one'
-        die('must provide migration name with --name') unless argv.name
-        migrate.one argv.name, (err, success) ->
-          return migrate.error(err) if err?
-          process.exit(if success then 0 else 1)
+  steps.push config.beforeTest.bind(config) if command is 'test' and config.beforeTest?
+  steps.push config.before.bind(config) if config.before?
 
-      when 'down'
-        migrate.down (err) ->
-          return migrate.error(err) if err?
-          process.exit 0
+  switch command
+    when 'generate'
+      die('must provide migration name with --name') unless argv.name
+      steps.push (cb) -> migrate.generate argv.name, (err, filename) ->
+        return cb(err) if err?
+        migrate.log "Created `#{filename}`"
+        cb()
 
-      when 'pending'
+    when 'one'
+      die('must provide migration name with --name') unless argv.name
+      steps.push migrate.one.bind(migrate, argv.name)
+
+    when 'down'
+      steps.push migrate.down.bind(migrate)
+
+    when 'pending'
+      steps.push (cb) ->
         migrate.pending (err, pendingNames) ->
-          return migrate.error(err) if err?
+          return cb(err) if err?
           if pendingNames.length
             for name in pendingNames
               {requiresDowntime} = migrate.get name
               migrate.log "Migration `#{name}` is pending #{requiresDowntime and "(requires downtime)" or ''}"
           else
             migrate.log 'No pending migrations'
-          process.exit 0
-          
-      when 'all'
-        migrate.all (err) ->
-          return migrate.error(err) if err?
-          process.exit 0
+          cb()
+        
+    when 'all'
+      steps.push migrate.all.bind(migrate)
 
-      when 'test'
-        die('must provide migration name with --name') unless argv.name
-        migrate.test argv.name, (err) ->
-          return migrate.error(err) if err?
-          process.exit 0
-      
-  catch err
-    migrate.error err
+    when 'test'
+      die('must provide migration name with --name') unless argv.name
+      steps.push migrate.test.bind(migrate, argv.name)
+
+  steps.push config.after.bind(config) if config.after?
+  steps.push config.afterTest.bind(config) if command is 'test' and config.afterTest?
+
+  async.series steps, (err) ->
+    return migrate.error err if err?
+    process.exit 0
 

@@ -67,17 +67,15 @@ class Migrate
     migrations = @sync.pending() if !migrations?
     for name in migrations
       if @sync.exists(name)
-        @error new Error "Migration `#{name}` has already been run"
-        return false
+        return @error new Error "Migration `#{name}` has already been run"
       migration = @get(name)
       @log "Running migration `#{migration.name}`"
       migration.sync.up()
       @getModel().sync.create name: migration.name
-    true
 
   down: fibrous ->
     version = @getModel().sync.findOne {}, {name: 1}, {sort: 'name': -1}
-    @error new Error("No migrations found!") if not version?
+    return @error new Error("No migrations found!") if not version?
     migration = @get(version.name)
     @log "Reversing migration `#{migration.name}`"
     migration.sync.down()
