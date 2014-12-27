@@ -6,16 +6,23 @@ Migrations for MongoDB
 [![Build Status](http://img.shields.io/travis/goodeggs/node-migrate-mongo.svg?style=flat-square)](https://travis-ci.org/goodeggs/node-migrate-mongo)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/goodeggs/node-migrate-mongo/blob/master/LICENSE.md)
 
+node-migrate-mongo enables data migrations in your existing project.  The state of your migrations is stored in the database specified in the `mongo` property of your `Migratefile.coffee`.  By default, this collection is called `migration_versions`.  See the Usage section (and let's be honest: the code) for more information.
+
 Despite the name, this module does not borrow from TJ's [node-migrate](https://github.com/tj/node-migrate), though it follows very similar conventions.
 
 ## Usage
 
-```
-npm install node-migrate-mongo
-```
+In your existing project where you'd like to have migrations:
 
-```javascript
-var nodeMigrateMongo = require('node-migrate-mongo');
+```
+npm install --save node-migrate-mongo
+cat << EOF- > Migratefile.coffee
+  module.exports =
+    mongo: 'mongodb://localhost/your_db'
+EOF
+migrate generate --name my_first_migration
+# edit it
+migrate all
 ```
 
 ## Contributing
