@@ -15,8 +15,10 @@ describe 'node-migrate-mongo', ->
   migrate = null
 
   before ->
-    opts = path: __dirname
-    migrate = new Migrate opts, StubMigrationVersion
+    opts =
+      path: __dirname
+      model: StubMigrationVersion
+    migrate = new Migrate opts
     sinon.stub(migrate, 'log')
 
   after ->
@@ -172,7 +174,7 @@ describe 'node-migrate-mongo', ->
 
     scenarioForFileExtension = (ext) ->
       before fibrous ->
-        migrate2 = new Migrate {path: __dirname, ext: ext}, StubMigrationVersion
+        migrate2 = new Migrate {path: __dirname, ext: ext, model: StubMigrationVersion}
         sinon.stub(fse, 'readdir').yields null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
         sinon.stub(StubMigrationVersion, 'distinct').yields null, ['migration1']
         pending = migrate2.sync.pending()

@@ -5,7 +5,8 @@ fibrous = require 'fibrous'
 slugify = require 'slugify'
 
 class Migrate
-  constructor: (@opts, @model) ->
+  constructor: (@opts={}) ->
+    @_model = @opts.model
     @opts.path ?= 'migrations'
     @opts.ext ?= 'coffee'
     @opts.template ?= """
@@ -23,10 +24,9 @@ class Migrate
           require('child_process').exec "mongo test --eval \\"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\\"", ->
             done()
     """
-    @getModel()
 
-  getModel: ->
-    @model ?= do =>
+  model: ->
+    @_model ?= do =>
       @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
       connection = mongoose.createConnection @opts.mongo
 
@@ -35,8 +35,6 @@ class Migrate
         createdAt:  type: Date, default: Date.now
 
       connection.model 'MigrationVersion', schema, 'migration_versions'
-
-  getTemplate: (name) -> @opts.template
 
   log: (message) ->
     console.log message
@@ -52,7 +50,7 @@ class Migrate
 
   # Check a migration has been run
   exists: fibrous (name) ->
-    @getModel().sync.findOne({name})?
+    @model().sync.findOne({name})?
 
   test: fibrous (name) ->
     @log "Testing migration `#{name}`"
@@ -71,10 +69,10 @@ class Migrate
       migration = @get(name)
       @log "Running migration `#{migration.name}`"
       migration.sync.up()
-      @getModel().sync.create name: migration.name
+      @model().sync.create name: migration.name
 
   down: fibrous ->
-    version = @getModel().sync.findOne {}, {name: 1}, {sort: 'name': -1}
+    version = @model().sync.findOne {}, {name: 1}, {sort: 'name': -1}
     return @error new Error("No migrations found!") if not version?
     migration = @get(version.name)
     @log "Reversing migration `#{migration.name}`"
@@ -84,7 +82,7 @@ class Migrate
   # Return a list of pending migrations
   pending: fibrous ->
     filenames = fse.sync.readdir(@opts.path).sort()
-    migrationsAlreadyRun = @getModel().sync.distinct('name')
+    migrationsAlreadyRun = @model().sync.distinct('name')
     names = filenames.map (filename) =>
       return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
       match[1]
@@ -100,7 +98,7 @@ class Migrate
     timestamp = (new Date()).toISOString().replace /\D/g, ''
     filename = "#{@opts.path}/#{timestamp}_#{name}.#{@opts.ext}"
     fse.sync.mkdirp @opts.path
-    fse.sync.writeFile filename, @getTemplate name
+    fse.sync.writeFile filename, @opts.template
     filename
 
 module.exports = Migrate
