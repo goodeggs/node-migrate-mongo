@@ -28,7 +28,7 @@
     "fibrous": "^0.3.3",
     "fs-extra": "^0.13.0",
     "interpret": "^0.3.10",
-    "liftoff": "^1.0.3",
+    "liftoff": "^2.0.0",
     "minimist": "^1.1.0",
     "mongoose": "^3.8.21",
     "slugify": "^0.1.0",
