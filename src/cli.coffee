@@ -24,6 +24,10 @@ module.exports = (config, argv) ->
     err.printStack = false
     migrate.error(err)
 
+  usage = ->
+    console.error 'Usage: migrate <generate|one|down|pending|all|test [--name <migration_name>]'
+    process.exit 0
+
   command = argv._[0]
 
   steps = []
@@ -32,6 +36,9 @@ module.exports = (config, argv) ->
   steps.push config.before.bind(config) if config.before?
 
   switch command
+    when '--help'
+      usage()
+
     when 'generate'
       die('must provide migration name with --name') unless argv.name
       steps.push (cb) -> migrate.generate argv.name, (err, filename) ->
@@ -64,6 +71,9 @@ module.exports = (config, argv) ->
     when 'test'
       die('must provide migration name with --name') unless argv.name
       steps.push migrate.test.bind(migrate, argv.name)
+
+    else
+      usage()
 
   steps.push config.after.bind(config) if config.after?
   steps.push config.afterTest.bind(config) if command is 'test' and config.afterTest?
