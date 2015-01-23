@@ -25,7 +25,7 @@ module.exports = (config, argv) ->
     migrate.error(err)
 
   usage = ->
-    console.error 'Usage: migrate <generate|one|down|pending|all|test [--name <migration_name>]'
+    console.error 'Usage: migrate <generate|one|down|pending|all|test [--name <migration_name>]>'
     process.exit 0
 
   command = argv._[0]
