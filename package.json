@@ -30,7 +30,7 @@
     "interpret": "^0.3.10",
     "liftoff": "^2.0.0",
     "minimist": "^1.1.0",
-    "mongoose": "^3.8.21",
+    "mongoose": ">= 3.8.21",
     "slugify": "^0.1.0",
     "v8flags": "^1.0.8",
     "async": "^0.9.0"
