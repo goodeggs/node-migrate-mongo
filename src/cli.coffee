@@ -63,7 +63,7 @@ module.exports = (config, argv) ->
           else
             migrate.log 'No pending migrations'
           cb()
-        
+
     when 'all'
       steps.push migrate.all.bind(migrate)
 

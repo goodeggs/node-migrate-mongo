@@ -1,9 +1,10 @@
 async = require 'async'
-path = require 'path'
 fse = require 'fs-extra'
-mongoose = require 'mongoose'
-slugify = require 'slugify'
 isFunction = require 'lodash.isfunction'
+mongoose = require 'mongoose'
+path = require 'path'
+pathIsAbsolute = require 'path-is-absolute'
+slugify = require 'slugify'
 
 class Migrate
   constructor: (@opts={}) ->
@@ -43,10 +44,20 @@ class Migrate
   error: (err) ->
     throw err
 
-  get: (name) ->
-    name = name.replace new RegExp("\.#{@opts.ext}$"), ''
-    migration = require path.resolve("#{@opts.path}/#{name}")
-    migration.name = name
+  get: (pathName) ->
+    migrationName = path.basename(pathName, ".#{@opts.ext}")
+    pathName = switch
+      when pathIsAbsolute(pathName) and fse.existsSync(pathName)
+        pathName
+      when fse.existsSync(path.join(process.cwd(), pathName))
+        path.resolve(process.cwd(), pathName)
+      else
+        path.resolve(@opts.path, migrationName)
+
+    console.log {cwd: path.join(process.cwd(), pathName), cwdExists: fse.existsSync(path.join(process.cwd(), pathName)), migrationName, pathName}
+
+    migration = require pathName
+    migration.name = migrationName
     migration
 
   # Check a migration has been run
@@ -56,8 +67,9 @@ class Migrate
       done(null, count > 0)
 
   test: (name, done) ->
-    @log "Testing migration `#{name}`"
-    @get(name).test(done)
+    migration = @get(name)
+    @log "Testing migration `#{migration.name}`"
+    migration.test(done)
 
   # Run one migration by name
   one: (name, done) ->
