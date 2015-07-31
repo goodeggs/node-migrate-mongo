@@ -10,6 +10,7 @@ class StubMigrationVersion
   @findOne: ->
   @create: ->
   @distinct: ->
+  @count: ->
 
 describe 'node-migrate-mongo', ->
   migrate = null
@@ -38,11 +39,11 @@ describe 'node-migrate-mongo', ->
 
   describe '.exists', ->
     before fibrous ->
-      sinon.stub StubMigrationVersion, 'findOne', ({name}, cb) ->
-        cb null, if name is 'existing' then {name} else null
+      sinon.stub StubMigrationVersion, 'count', ({name}, cb) ->
+        cb null, if name is 'existing' then 1 else 0
 
     after ->
-      StubMigrationVersion.findOne.restore()
+      StubMigrationVersion.count.restore()
 
     it 'returns true for existing migration', fibrous ->
       expect(migrate.sync.exists 'existing').to.eql true
@@ -175,8 +176,8 @@ describe 'node-migrate-mongo', ->
     scenarioForFileExtension = (ext) ->
       before fibrous ->
         migrate2 = new Migrate {path: __dirname, ext: ext, model: StubMigrationVersion}
-        sinon.stub(fse, 'readdir').yields null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
-        sinon.stub(StubMigrationVersion, 'distinct').yields null, ['migration1']
+        sinon.stub(fse, 'readdir').yieldsAsync null, ["migration3.#{ext}", "migration2.#{ext}", "migration1.#{ext}"]
+        sinon.stub(StubMigrationVersion, 'distinct').yieldsAsync null, ['migration1']
         pending = migrate2.sync.pending()
 
       after ->
