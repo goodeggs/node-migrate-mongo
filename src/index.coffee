@@ -3,6 +3,7 @@ fse = require 'fs-extra'
 mongoose = require 'mongoose'
 fibrous = require 'fibrous'
 slugify = require 'slugify'
+pathIsAbsolute = require 'path-is-absolute'
 
 class Migrate
   constructor: (@opts={}) ->
@@ -42,10 +43,20 @@ class Migrate
   error: (err) ->
     throw err
 
-  get: (name) ->
-    name = name.replace new RegExp("\.#{@opts.ext}$"), ''
-    migration = require path.resolve("#{@opts.path}/#{name}")
-    migration.name = name
+  get: (pathName) ->
+    migrationName = path.basename(pathName, ".#{@opts.ext}")
+    pathName = switch
+      when pathIsAbsolute(pathName) and fse.existsSync(pathName)
+        pathName
+      when fse.existsSync(path.join(process.cwd(), pathName))
+        path.resolve(process.cwd(), pathName)
+      else
+        path.resolve(@opts.path, migrationName)
+
+    console.log {cwd: path.join(process.cwd(), pathName), cwdExists: fse.existsSync(path.join(process.cwd(), pathName)), migrationName, pathName}
+
+    migration = require pathName
+    migration.name = migrationName
     migration
 
   # Check a migration has been run
@@ -53,8 +64,9 @@ class Migrate
     @model().sync.findOne({name})?
 
   test: fibrous (name) ->
-    @log "Testing migration `#{name}`"
-    @get(name).sync.test()
+    migration = @get(name)
+    @log "Testing migration `#{migration.name}`"
+    migration.sync.test()
 
   # Run one migration by name
   one: fibrous (name) ->
