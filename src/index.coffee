@@ -3,6 +3,7 @@ fse = require 'fs-extra'
 mongoose = require 'mongoose'
 fibrous = require 'fibrous'
 slugify = require 'slugify'
+pathIsAbsolute = require 'path-is-absolute'
 
 class Migrate
   constructor: (@opts={}) ->
@@ -44,7 +45,16 @@ class Migrate
 
   get: (pathName) ->
     migrationName = path.basename(pathName, ".#{@opts.ext}")
-    pathName = if fse.existsSync(pathName) then pathName else path.resolve("#{@opts.path}/#{migrationName}")
+    pathName = switch
+      when pathIsAbsolute(pathName) and fse.existsSync(pathName)
+        pathName
+      when fse.existsSync(path.join(process.cwd(), pathName))
+        path.resolve(process.cwd(), pathName)
+      else
+        path.resolve(@opts.path, migrationName)
+
+    console.log {cwd: path.join(process.cwd(), pathName), cwdExists: fse.existsSync(path.join(process.cwd(), pathName)), migrationName, pathName}
+
     migration = require pathName
     migration.name = migrationName
     migration

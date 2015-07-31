@@ -17,10 +17,13 @@ describe 'node-migrate-mongo', ->
 
   before ->
     opts =
-      path: __dirname
+      path: path.join(__dirname, 'test-migrations')
       model: StubMigrationVersion
     migrate = new Migrate opts
     sinon.stub(migrate, 'log')
+
+    # changing directory so we can be sure what process.cwd() will point to
+    process.chdir path.join(__dirname)
 
   after ->
     migrate.log.restore()
@@ -51,6 +54,16 @@ describe 'node-migrate-mongo', ->
     describe 'given a partial path to a file', ->
       before ->
         migration = migrate.get path.join(__dirname, 'migration')
+
+      it 'loads ok', ->
+        expect(migration).to.be.ok
+
+      it 'has name', ->
+        expect(migration.name).to.equal 'migration'
+
+    describe 'given a relative path to a file', ->
+      before ->
+        migration = migrate.get path.join('test-migrations', 'migration.coffee')
 
       it 'loads ok', ->
         expect(migration).to.be.ok
