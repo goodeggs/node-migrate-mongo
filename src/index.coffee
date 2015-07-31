@@ -54,8 +54,6 @@ class Migrate
       else
         path.resolve(@opts.path, migrationName)
 
-    console.log {cwd: path.join(process.cwd(), pathName), cwdExists: fse.existsSync(path.join(process.cwd(), pathName)), migrationName, pathName}
-
     migration = require pathName
     migration.name = migrationName
     migration
