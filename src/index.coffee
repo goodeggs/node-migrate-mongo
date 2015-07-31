@@ -42,10 +42,11 @@ class Migrate
   error: (err) ->
     throw err
 
-  get: (name) ->
-    name = name.replace new RegExp("\.#{@opts.ext}$"), ''
-    migration = require path.resolve("#{@opts.path}/#{name}")
-    migration.name = name
+  get: (pathName) ->
+    migrationName = path.basename(pathName, ".#{@opts.ext}")
+    pathName = if fse.existsSync(pathName) then pathName else path.resolve("#{@opts.path}/#{migrationName}")
+    migration = require pathName
+    migration.name = migrationName
     migration
 
   # Check a migration has been run
@@ -53,8 +54,9 @@ class Migrate
     @model().sync.findOne({name})?
 
   test: fibrous (name) ->
-    @log "Testing migration `#{name}`"
-    @get(name).sync.test()
+    migration = @get(name)
+    @log "Testing migration `#{migration.name}`"
+    migration.sync.test()
 
   # Run one migration by name
   one: fibrous (name) ->

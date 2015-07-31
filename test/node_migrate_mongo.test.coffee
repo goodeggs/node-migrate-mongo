@@ -2,6 +2,7 @@
 fibrous = require 'fibrous'
 fse = require 'fs-extra'
 sinon = require 'sinon'
+path = require 'path'
 chai.use require 'sinon-chai'
 Migrate = require '../'
 
@@ -27,14 +28,36 @@ describe 'node-migrate-mongo', ->
   describe '.get', ->
     migration = null
 
-    before ->
-      migration = migrate.get 'migration'
+    describe 'given a file in the opts.path path', ->
+      before ->
+        migration = migrate.get 'migration'
 
-    it 'loads ok', ->
-      expect(migration).to.be.ok
+      it 'loads ok', ->
+        expect(migration).to.be.ok
 
-    it 'has name', ->
-      expect(migration.name).to.equal 'migration'
+      it 'has name', ->
+        expect(migration.name).to.equal 'migration'
+
+    describe 'given a full path to a file', ->
+      before ->
+        migration = migrate.get path.join(__dirname, 'migration.coffee')
+
+      it 'loads ok', ->
+        expect(migration).to.be.ok
+
+      it 'has name', ->
+        expect(migration.name).to.equal 'migration'
+
+    describe 'given a partial path to a file', ->
+      before ->
+        migration = migrate.get path.join(__dirname, 'migration')
+
+      it 'loads ok', ->
+        expect(migration).to.be.ok
+
+      it 'has name', ->
+        expect(migration.name).to.equal 'migration'
+
 
   describe '.exists', ->
     before fibrous ->
