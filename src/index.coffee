@@ -1,9 +1,10 @@
-path = require 'path'
+async = require 'async'
 fse = require 'fs-extra'
+isFunction = require 'lodash.isfunction'
 mongoose = require 'mongoose'
-fibrous = require 'fibrous'
-slugify = require 'slugify'
+path = require 'path'
 pathIsAbsolute = require 'path-is-absolute'
+slugify = require 'slugify'
 
 class Migrate
   constructor: (@opts={}) ->
@@ -60,58 +61,82 @@ class Migrate
     migration
 
   # Check a migration has been run
-  exists: fibrous (name) ->
-    @model().sync.findOne({name})?
+  exists: (name, done) ->
+    @model().count {name}, (err, count) ->
+      return done(err) if err
+      done(null, count > 0)
 
-  test: fibrous (name) ->
+  test: (name, done) ->
     migration = @get(name)
     @log "Testing migration `#{migration.name}`"
-    migration.sync.test()
+    migration.test(done)
 
   # Run one migration by name
-  one: fibrous (name) ->
-    @sync.all([name])
+  one: (name, done) ->
+    @all [name], done
 
   # Run all provided migrations or all pending if not provided
-  all: fibrous (migrations) ->
-    migrations = @sync.pending() if !migrations?
-    for name in migrations
-      if @sync.exists(name)
-        return @error new Error "Migration `#{name}` has already been run"
-      migration = @get(name)
-      @log "Running migration `#{migration.name}`"
-      migration.sync.up()
-      @model().sync.create name: migration.name
+  all: (migrations, done) ->
+    if isFunction(migrations)
+      done = migrations
+      migrations = null
 
-  down: fibrous ->
-    version = @model().sync.findOne {}, {name: 1}, {sort: 'name': -1}
-    return @error new Error("No migrations found!") if not version?
-    migration = @get(version.name)
-    @log "Reversing migration `#{migration.name}`"
-    migration.sync.down()
-    version.sync.remove()
+    if !migrations?
+      return @pending (err, migrations) =>
+        return done(err) if err
+        @all(migrations, done)
+
+    runIndividualMigration = (name, doneWithIndividualMigration) =>
+      @exists name, (err, exists) =>
+        return doneWithIndividualMigration(err) if err
+        return doneWithIndividualMigration(@error new Error "Migration `#{name}` has already been run") if exists
+        migration = @get name
+        @log "Running migration `#{migration.name}`"
+        migration.up (err) =>
+          return doneWithIndividualMigration(err) if err
+          @model().create {name: migration.name}, doneWithIndividualMigration
+
+    async.eachSeries migrations, runIndividualMigration, done
+
+  down: (done) ->
+    @model().findOne {}, {name: 1}, {sort: 'name': -1}, (err, version) =>
+      return done(err) if err
+      return done(@error new Error("No migrations found!")) if not version?
+      migration = @get(version.name)
+      @log "Reversing migration `#{migration.name}`"
+      migration.down (err) =>
+        return done(err) if err
+        version.remove done
 
   # Return a list of pending migrations
-  pending: fibrous ->
-    filenames = fse.sync.readdir(@opts.path).sort()
-    migrationsAlreadyRun = @model().sync.distinct('name')
-    names = filenames.map (filename) =>
-      return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
-      match[1]
-    .filter (name) ->
-      !!name
-    .filter (name) ->
-      name not in migrationsAlreadyRun
-    names
+  pending: (done) ->
+    async.parallel [
+      ((innerDone) => fse.readdir @opts.path, innerDone)
+      ((innerDone) => @model().distinct('name', innerDone))
+    ], (err, results) =>
+      return done(err) if err
+      filenames = results[0].sort()
+      migrationsAlreadyRun = results[1]
+      names = filenames.map (filename) =>
+        return unless (match = filename.match new RegExp "^([^_].+)\.#{@opts.ext}$")
+        match[1]
+      .filter (name) ->
+        !!name
+      .filter (name) ->
+        name not in migrationsAlreadyRun
+      done(null, names)
 
   # Generate a stub migration file
-  generate: fibrous (name) ->
+  generate: (name, done) ->
     name = "#{slugify name, '_'}"
     timestamp = (new Date()).toISOString().replace /\D/g, ''
     filename = "#{@opts.path}/#{timestamp}_#{name}.#{@opts.ext}"
-    fse.sync.mkdirp @opts.path
-    fse.sync.writeFile filename, @opts.template
-    filename
+    async.series [
+      ((innerDone) => fse.mkdirp @opts.path, innerDone)
+      ((innerDone) => fse.writeFile filename, @opts.template, innerDone)
+    ], (err) ->
+      return done(err) if err
+      done(null, filename)
 
 module.exports = Migrate
 
