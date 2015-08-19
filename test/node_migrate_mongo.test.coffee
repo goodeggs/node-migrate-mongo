@@ -86,6 +86,23 @@ describe 'node-migrate-mongo', ->
       it 'has context', ->
         expect(migration.foo).to.equal 'bar'
 
+    describe 'given config including a transform', ->
+      beforeEach 'set up Migrate with a transform', ->
+        @migrate2 = new Migrate
+          path: path.join(__dirname, 'test-migrations')
+          model: StubMigrationVersion
+          transform: (migration) ->
+            migration.herp = 'derp'
+            migration
+        sinon.stub @migrate2, 'log'
+
+      afterEach ->
+        @migrate2.log.restore()
+
+      it 'calls the transform', ->
+        migration = @migrate2.get 'migration'
+        expect(migration.herp).to.equal 'derp'
+
   describe '.exists', ->
     before fibrous ->
       sinon.stub StubMigrationVersion, 'count', ({name}, cb) ->

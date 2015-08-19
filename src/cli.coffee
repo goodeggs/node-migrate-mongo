@@ -16,7 +16,7 @@ module.exports = (config, argv) ->
 
   # opts: ext, path, template, mongo
   trimmedConfig = {}
-  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'mongo', 'context']
+  trimmedConfig[k] = v for k, v of config when k in ['ext', 'path', 'template', 'mongo', 'context', 'transform']
   migrate = new CustomMigrate trimmedConfig
 
   die = (message) ->

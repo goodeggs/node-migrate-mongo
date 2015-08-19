@@ -58,6 +58,10 @@ class Migrate
     migration = require pathName
     assign(migration, {name: migrationName})
     assign(migration, @opts.context)
+
+    if @opts.transform?
+      migration = @opts.transform migration
+
     migration
 
   exists: (name, done) ->
