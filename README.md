@@ -37,6 +37,7 @@ migrate all
 * **path** -- The place to store your migration files.  Defaults to `migrations`.
 * **ext** -- The extension for your migration files.  Defaults to `coffee`.
 * **template** -- The template used when generating migrations.
+* **context** -- Values provided as part of `this` within all migration functions (`up`, `down`, and `test`)
 
 before/after callbacks are called in this order: [ beforeTest, before, after, afterTest ]
 

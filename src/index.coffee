@@ -1,6 +1,7 @@
 async = require 'async'
 fse = require 'fs-extra'
 isFunction = require 'lodash.isfunction'
+assign = require 'lodash.assign'
 mongoose = require 'mongoose'
 path = require 'path'
 pathIsAbsolute = require 'path-is-absolute'
@@ -55,10 +56,10 @@ class Migrate
         path.resolve(@opts.path, migrationName)
 
     migration = require pathName
-    migration.name = migrationName
+    assign(migration, {name: migrationName})
+    assign(migration, @opts.context)
     migration
 
-  # Check a migration has been run
   exists: (name, done) ->
     @model().count {name}, (err, count) ->
       return done(err) if err

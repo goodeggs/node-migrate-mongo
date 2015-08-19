@@ -29,6 +29,7 @@
     "fs-extra": "^0.13.0",
     "interpret": "^0.3.10",
     "liftoff": "^2.0.0",
+    "lodash.assign": "^3.2.0",
     "lodash.isfunction": "^3.0.6",
     "minimist": "^1.1.0",
     "mongoose": ">= 3.8.21",
