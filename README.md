@@ -38,8 +38,33 @@ migrate all
 * **ext** -- The extension for your migration files.  Defaults to `coffee`.
 * **template** -- The template used when generating migrations.
 * **context** -- Values provided as part of `this` within all migration functions (`up`, `down`, and `test`)
+* **transform** -- A function that allows you to transform migrations before they are run.
 
 before/after callbacks are called in this order: [ beforeTest, before, after, afterTest ]
+
+## Migrations that take promises
+
+One way to accomplish this is with a `Migratefile` that looks like this, which
+will allow you to define migrations with `upPromise`, `downPromise`, and
+`testPromise` functions:
+
+```javascript
+var Promise = require 'bluebird';
+
+module.exports = {
+  transform: function(migration) {
+    ['up', 'down', 'test'].forEach(function(fn) {
+      var promiseVersion = migration[fn + "Promise"];
+      if (promiseVersion) {
+        migration[fn] = function(done) {
+          return Promise.resolve(promiseVersion()).nodeify(done);
+        };
+      }
+    });
+    return migration;
+  }
+}
+```
 
 ## Contributing
 
