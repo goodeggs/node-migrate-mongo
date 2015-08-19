@@ -20,6 +20,8 @@ describe 'node-migrate-mongo', ->
     opts =
       path: path.join(__dirname, 'test-migrations')
       model: StubMigrationVersion
+      context:
+        foo: 'bar'
     migrate = new Migrate opts
     sinon.stub(migrate, 'log')
 
@@ -42,6 +44,9 @@ describe 'node-migrate-mongo', ->
       it 'has name', ->
         expect(migration.name).to.equal 'migration'
 
+      it 'has context', ->
+        expect(migration.foo).to.equal 'bar'
+
     describe 'given a full path to a file', ->
       before ->
         migration = migrate.get path.join(__dirname, 'migration.coffee')
@@ -51,6 +56,9 @@ describe 'node-migrate-mongo', ->
 
       it 'has name', ->
         expect(migration.name).to.equal 'migration'
+
+      it 'has context', ->
+        expect(migration.foo).to.equal 'bar'
 
     describe 'given a partial path to a file', ->
       before ->
@@ -62,6 +70,9 @@ describe 'node-migrate-mongo', ->
       it 'has name', ->
         expect(migration.name).to.equal 'migration'
 
+      it 'has context', ->
+        expect(migration.foo).to.equal 'bar'
+
     describe 'given a relative path to a file', ->
       before ->
         migration = migrate.get path.join('test-migrations', 'migration.coffee')
@@ -72,6 +83,8 @@ describe 'node-migrate-mongo', ->
       it 'has name', ->
         expect(migration.name).to.equal 'migration'
 
+      it 'has context', ->
+        expect(migration.foo).to.equal 'bar'
 
   describe '.exists', ->
     before fibrous ->
@@ -94,6 +107,7 @@ describe 'node-migrate-mongo', ->
       migration =
         name: 'migration'
         test: sinon.stub().yields()
+        foo: 'bar'
       sinon.stub(migrate, 'get').returns migration
       migrate.sync.test('migration')
 
@@ -103,6 +117,9 @@ describe 'node-migrate-mongo', ->
     it 'executes migration test', fibrous ->
       expect(migration.test).to.have.been.calledOnce
 
+    it 'provides text with context', fibrous ->
+      expect(migration.test).to.have.been.calledOn sinon.match foo: 'bar'
+
   describe '.one', ->
     migration = null
 
@@ -110,6 +127,7 @@ describe 'node-migrate-mongo', ->
       migration =
         name: 'pending_migration'
         up: sinon.stub().yields()
+        foo: 'bar'
       sinon.stub(migrate, 'exists').yields null, false
       sinon.stub(migrate, 'get').returns migration
       sinon.stub(StubMigrationVersion, 'create').yields()
@@ -123,6 +141,9 @@ describe 'node-migrate-mongo', ->
     it 'calls up on migration', fibrous ->
       expect(migration.up).to.have.been.calledOnce
 
+    it 'provides up with context', fibrous ->
+      expect(migration.up).to.have.been.calledOn sinon.match foo: 'bar'
+
     it 'saves new migration', fibrous ->
       expect(StubMigrationVersion.create).to.have.been.calledWithMatch name: 'pending_migration'
 
@@ -134,6 +155,7 @@ describe 'node-migrate-mongo', ->
         migration =
           name: 'pending_migration'
           up: sinon.stub().yields()
+          foo: 'bar'
         sinon.stub(migrate, 'pending').yields null, ['pending_migration']
         sinon.stub(migrate, 'exists').yields null, false
         sinon.stub(migrate, 'get').returns migration
@@ -149,6 +171,9 @@ describe 'node-migrate-mongo', ->
       it 'calls up on migration', fibrous ->
         expect(migration.up).to.have.been.calledOnce
 
+      it 'provides up with context', fibrous ->
+        expect(migration.up).to.have.been.calledOn sinon.match foo: 'bar'
+
       it 'saves new migration', fibrous ->
         expect(StubMigrationVersion.create).to.have.been.calledWithMatch name: 'pending_migration'
 
@@ -157,6 +182,7 @@ describe 'node-migrate-mongo', ->
         migration =
           name: 'existing_migration'
           up: sinon.stub().yields()
+          foo: 'bar'
         sinon.stub(migrate, 'pending').yields null, ['existing_migration']
         sinon.stub(migrate, 'exists').yields null, true
         sinon.stub(migrate, 'get').returns migration
@@ -187,6 +213,7 @@ describe 'node-migrate-mongo', ->
       migration =
         name: 'migration'
         down: sinon.stub().yields()
+        foo: 'bar'
       sinon.stub(migrate, 'get').returns migration
 
       version =
@@ -202,6 +229,9 @@ describe 'node-migrate-mongo', ->
 
     it 'calls down on the migration', fibrous ->
       expect(migration.down).to.have.been.calledOnce
+
+    it 'provides down with context', fibrous ->
+      expect(migration.down).to.have.been.calledOn sinon.match foo: 'bar'
 
     it 'removes version', fibrous ->
       expect(version.remove).to.have.been.calledOnce
@@ -241,4 +271,3 @@ describe 'node-migrate-mongo', ->
 
     it 'generates migration file', fibrous ->
       expect(fse.writeFile).to.have.been.calledWithMatch /^.*_filename/, /.+/
-
