@@ -12,6 +12,7 @@ class StubMigrationVersion
   @create: ->
   @distinct: ->
   @count: ->
+  @remove: ->
 
 describe 'node-migrate-mongo', ->
   migrate = null
@@ -237,11 +238,13 @@ describe 'node-migrate-mongo', ->
         name: 'migration'
         remove: sinon.stub().yields()
       sinon.stub(StubMigrationVersion, 'findOne').yields null, version
+      sinon.stub(StubMigrationVersion, 'remove').yields null, 1
 
       migrate.sync.down()
 
     after ->
       StubMigrationVersion.findOne.restore()
+      StubMigrationVersion.remove.restore()
       migrate.get.restore()
 
     it 'calls down on the migration', fibrous ->
@@ -251,7 +254,7 @@ describe 'node-migrate-mongo', ->
       expect(migration.down).to.have.been.calledOn sinon.match foo: 'bar'
 
     it 'removes version', fibrous ->
-      expect(version.remove).to.have.been.calledOnce
+      expect(StubMigrationVersion.remove).to.have.been.calledWith sinon.match name: 'migration'
 
   describe '.pending', ->
     {pending} = {}

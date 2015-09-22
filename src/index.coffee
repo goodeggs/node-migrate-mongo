@@ -2,14 +2,15 @@ async = require 'async'
 fse = require 'fs-extra'
 isFunction = require 'lodash.isfunction'
 assign = require 'lodash.assign'
-mongoose = require 'mongoose'
 path = require 'path'
 pathIsAbsolute = require 'path-is-absolute'
 slugify = require 'slugify'
 
+Store = require './store'
+
 class Migrate
   constructor: (@opts={}) ->
-    @_model = @opts.model
+    @store = new Store(@opts)
     @opts.path ?= 'migrations'
     @opts.ext ?= 'coffee'
     @opts.template ?= """
@@ -23,21 +24,8 @@ class Migrate
           throw new Error('irreversible migration')
 
         test: (done) ->
-          console.log 'copying development to test'
-          require('child_process').exec "mongo test --eval \\"db.dropDatabase(); db.copyDatabase('development', 'test'); print('copied')\\"", ->
-            done()
+          done()
     """
-
-  model: ->
-    @_model ?= do =>
-      @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
-      connection = mongoose.createConnection @opts.mongo
-
-      schema = new mongoose.Schema
-        name:  type: String, index: true, unique: true, required: true
-        createdAt:  type: Date, default: Date.now
-
-      connection.model 'MigrationVersion', schema, 'migration_versions'
 
   log: (message) ->
     console.log message
@@ -65,9 +53,7 @@ class Migrate
     migration
 
   exists: (name, done) ->
-    @model().count {name}, (err, count) ->
-      return done(err) if err
-      done(null, count > 0)
+    @store.exists(name, done)
 
   test: (name, done) ->
     migration = @get(name)
@@ -97,25 +83,25 @@ class Migrate
         @log "Running migration `#{migration.name}`"
         migration.up (err) =>
           return doneWithIndividualMigration(err) if err
-          @model().create {name: migration.name}, doneWithIndividualMigration
+          @store.save(migration.name, doneWithIndividualMigration)
 
     async.eachSeries migrations, runIndividualMigration, done
 
   down: (done) ->
-    @model().findOne {}, {name: 1}, {sort: 'name': -1}, (err, version) =>
+    @store.getMostRecent (err, name) =>
       return done(err) if err
-      return done(@error new Error("No migrations found!")) if not version?
-      migration = @get(version.name)
+      return done(@error new Error("No migrations found!")) if not name?
+      migration = @get(name)
       @log "Reversing migration `#{migration.name}`"
       migration.down (err) =>
         return done(err) if err
-        version.remove done
+        @store.remove(name, done)
 
   # Return a list of pending migrations
   pending: (done) ->
     async.parallel [
       ((innerDone) => fse.readdir @opts.path, innerDone)
-      ((innerDone) => @model().distinct('name', innerDone))
+      ((innerDone) => @store.getAll(innerDone))
     ], (err, results) =>
       return done(err) if err
       filenames = results[0].sort()
