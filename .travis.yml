@@ -1,3 +1,9 @@
+sudo: required
+dist: trusty
 language: node_js
 node_js:
-  - '0.10'
+  - '6'
+  - '8'
+env:
+  global:
+    - NODE_ENV=test
