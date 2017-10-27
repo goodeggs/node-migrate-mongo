@@ -27,8 +27,8 @@
   "dependencies": {
     "async": "^0.9.2",
     "fs-extra": "^0.13.0",
-    "interpret": "^0.3.10",
-    "liftoff": "^2.0.0",
+    "interpret": "^1.0.4",
+    "liftoff": "^2.3.0",
     "lodash.assign": "^3.2.0",
     "lodash.isfunction": "^3.0.6",
     "minimist": "^1.1.0",
