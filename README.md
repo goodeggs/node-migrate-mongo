@@ -26,7 +26,13 @@ migrate generate --name my_first_migration
 migrate all
 ```
 
-## Migratefile Options
+## Migratefile
+
+### JavaScript variants
+
+Your Migratefile file can be any JavaScript variant recognized by [interpret](https://www.npmjs.com/package/interpret#jsvariants). Just make sure to use the right file extension. For CoffeeScript, use the `.coffee` extension. For [Babel](https://babeljs.io/), use the `.babel.js` extension.
+
+### Options
 
 * **beforeTest** -- An async function called before running a migration test.  By default sets `NODE_ENV=test`.
 * **before** -- An async function called before running a command.  Useful for connecting your app to its database.
