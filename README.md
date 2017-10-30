@@ -30,7 +30,7 @@ migrate all
 
 ### JavaScript variants
 
-Your Migratefile file can be any JavaScript variant recognized by [interpret](https://www.npmjs.com/package/interpret#jsvariants). Just make sure to use the right file extension. For CoffeeScript, use the `.coffee` extension. For babel.js, use the `.babel.js` extension.
+Your Migratefile file can be any JavaScript variant recognized by [interpret](https://www.npmjs.com/package/interpret#jsvariants). Just make sure to use the right file extension. For CoffeeScript, use the `.coffee` extension. For [Babel](https://babeljs.io/), use the `.babel.js` extension.
 
 ### Options
 
