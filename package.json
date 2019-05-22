@@ -46,9 +46,13 @@
     "sinon-chai": "^2.6.0"
   },
   "scripts": {
-    "compile": "coffee --bare --compile --output lib/ src/",
-    "prepublish": "npm run compile",
-    "pretest": "npm run compile",
+    "dist": "yarn build",
+    "build": "coffee --bare --compile --output lib/ src/",
+    "prepublish": "yarn build",
+    "pretest": "yarn build",
     "test": "mocha"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
