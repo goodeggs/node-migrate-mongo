@@ -32,16 +32,19 @@
     "lodash.assign": "^3.2.0",
     "lodash.isfunction": "^3.0.6",
     "minimist": "^1.1.0",
-    "mongoose": ">= 4.11.13",
     "path-is-absolute": "^1.0.0",
     "slugify": "^0.1.0",
     "v8flags": "^1.0.8"
+  },
+  "peerDependencies": {
+    "mongoose": "^4.11.13"
   },
   "devDependencies": {
     "chai": "^1.10.0",
     "coffee-script": "^1.8.0",
     "fibrous": "^0.4.0",
     "mocha": "^1.21.5",
+    "mongoose": "^4.11.13",
     "sinon": "^1.12.2",
     "sinon-chai": "^2.6.0"
   },
