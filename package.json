@@ -1,6 +1,6 @@
 {
   "name": "node-migrate-mongo",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Migrations for MongoDB",
   "author": "Good Eggs <open-source@goodeggs.com>",
   "contributors": [
