@@ -11,8 +11,8 @@ class StubMigrationVersion
   @findOne: ->
   @create: ->
   @distinct: ->
-  @count: ->
-  @remove: ->
+  @countDocuments: ->
+  @deleteOne: ->
 
 describe 'node-migrate-mongo', ->
   migrate = null
@@ -106,11 +106,11 @@ describe 'node-migrate-mongo', ->
 
   describe '.exists', ->
     before fibrous ->
-      sinon.stub StubMigrationVersion, 'count', ({name}, cb) ->
+      sinon.stub StubMigrationVersion, 'countDocuments', ({name}, cb) ->
         cb null, if name is 'existing' then 1 else 0
 
     after ->
-      StubMigrationVersion.count.restore()
+      StubMigrationVersion.countDocuments.restore()
 
     it 'returns true for existing migration', fibrous ->
       expect(migrate.sync.exists 'existing').to.eql true
@@ -236,15 +236,15 @@ describe 'node-migrate-mongo', ->
 
       version =
         name: 'migration'
-        remove: sinon.stub().yields()
+        deleteOne: sinon.stub().yields()
       sinon.stub(StubMigrationVersion, 'findOne').yields null, version
-      sinon.stub(StubMigrationVersion, 'remove').yields null, 1
+      sinon.stub(StubMigrationVersion, 'deleteOne').yields null, 1
 
       migrate.sync.down()
 
     after ->
       StubMigrationVersion.findOne.restore()
-      StubMigrationVersion.remove.restore()
+      StubMigrationVersion.deleteOne.restore()
       migrate.get.restore()
 
     it 'calls down on the migration', fibrous ->
@@ -254,7 +254,7 @@ describe 'node-migrate-mongo', ->
       expect(migration.down).to.have.been.calledOn sinon.match foo: 'bar'
 
     it 'removes version', fibrous ->
-      expect(StubMigrationVersion.remove).to.have.been.calledWith sinon.match name: 'migration'
+      expect(StubMigrationVersion.deleteOne).to.have.been.calledWith sinon.match name: 'migration'
 
   describe '.pending', ->
     {pending} = {}
