@@ -33,8 +33,7 @@
     "lodash.isfunction": "^3.0.6",
     "minimist": "^1.1.0",
     "path-is-absolute": "^1.0.0",
-    "slugify": "^0.1.0",
-    "v8flags": "^1.0.8"
+    "slugify": "^0.1.0"
   },
   "peerDependencies": {
     "mongoose": "^4.11.13"
