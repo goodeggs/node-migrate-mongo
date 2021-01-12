@@ -1,6 +1,6 @@
 {
   "name": "node-migrate-mongo",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "description": "Migrations for MongoDB",
   "author": "Good Eggs <open-source@goodeggs.com>",
   "contributors": [
@@ -33,18 +33,17 @@
     "lodash.isfunction": "^3.0.6",
     "minimist": "^1.1.0",
     "path-is-absolute": "^1.0.0",
-    "slugify": "^0.1.0",
-    "v8flags": "^1.0.8"
+    "slugify": "^0.1.0"
   },
   "peerDependencies": {
-    "mongoose": "^4.11.13"
+    "mongoose": "^5.0.0"
   },
   "devDependencies": {
     "chai": "^1.10.0",
     "coffee-script": "^1.8.0",
     "fibrous": "^0.4.0",
     "mocha": "^1.21.5",
-    "mongoose": "^4.11.13",
+    "mongoose": "^5.11.11",
     "sinon": "^1.12.2",
     "sinon-chai": "^2.6.0"
   },

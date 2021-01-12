@@ -31,15 +31,16 @@ module.exports = class MongoStore
       connection.model 'MigrationVersion', schema, 'migration_versions'
 
   exists: (name, done) ->
-    @model().count {name}, (err, count) ->
+    @model().countDocuments({name}, (err, count) ->
       return done(err) if err
       done(null, count > 0)
+    )
 
   save: (name, done) ->
-    @model().create {name}, done
+    @model().create({name}, done)
 
   remove: (name, done) ->
-    @model().remove({name}, done)
+    @model().deleteOne({name}, done)
 
   getMostRecent: (done) ->
     @model().findOne {}, {name: 1}, {sort: 'name': -1}, (err, version) =>
