@@ -11,9 +11,9 @@ cache:
     - /tmp/ci-tools
 
 before_install:
-  - curl -sSL https://github.com/goodeggs/travis-utils/raw/master/install-ci-tools.sh | CACHE_DIR=/tmp/ci-tools sh -s -- node=10.15.3 yarn=1.15.2
+  - curl -sSL https://github.com/goodeggs/travis-utils/raw/master/install-ci-tools.sh | CACHE_DIR=/tmp/ci-tools sh -s -- node=12.20.1 yarn=1.9.4
 
-install: yarn
+install: yarn --frozen-lockfile
 
 script: yarn test
 
