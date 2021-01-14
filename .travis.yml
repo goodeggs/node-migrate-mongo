@@ -3,17 +3,12 @@ language: bash
 env:
   global:
     - PATH="/tmp/ci-tools:$PATH"
-    - 'NPM_EMAIL=open-source@goodeggs.com' # for npm publish
-    - secure: "gUKaBHaoA8O/lBlD9iTnQb3cPGn1k5k4KxCdk6jRUWk1oquVEKELZZSq8cMZo+PlO5uOeLxXNOLqS6zrYCSEcZFZpJp2AAsPi+qezHfsIu7nSm8TZ0VqcsnK/2q075QDtw/pjai8xD2JZh36ngnu3DBcAh9j4bHwFJe7D8N4weY=" # NPM_AUTH
     - NODE_ENV=test
 
 cache:
   yarn: true
   directories:
     - /tmp/ci-tools
-
-# don't build tags
-if: tag IS blank
 
 before_install:
   - curl -sSL https://github.com/goodeggs/travis-utils/raw/master/install-ci-tools.sh | CACHE_DIR=/tmp/ci-tools sh -s -- node=10.15.3 yarn=1.15.2
@@ -23,6 +18,11 @@ install: yarn
 script: yarn test
 
 deploy:
-  provider: script
+  provider: npm
+  email: open-source@goodeggs.com
+  api_token:
+    secure: "brDvSFKmaXc7uIIEgHp70wOYT01oIsxpPQFR1qUJn3ol1hmV7hSc/nHsP/LBUlobmu/gCYQPrfRwsDFLbRjIeB6QVWpxmi63b0upnOOEGHKylH3KSgghj20mJTCqmIYVyHRpq+2rsycpkpIHYzV+NY9YA6uimLv1hxXJXQcWNyM="
   skip_cleanup: true
-  script: ./publish.sh
+  on:
+    tags: true
+    all_branches: true
