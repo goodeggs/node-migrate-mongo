@@ -23,7 +23,7 @@ deploy:
   provider: npm
   email: open-source@goodeggs.com
   api_token:
-    secure: "brDvSFKmaXc7uIIEgHp70wOYT01oIsxpPQFR1qUJn3ol1hmV7hSc/nHsP/LBUlobmu/gCYQPrfRwsDFLbRjIeB6QVWpxmi63b0upnOOEGHKylH3KSgghj20mJTCqmIYVyHRpq+2rsycpkpIHYzV+NY9YA6uimLv1hxXJXQcWNyM="
+    secure: "ZEa/6ejuHODcl3I1swX9ZB5rgNPG0ben5FCzgxU/bxf6ilrLPb9y63vSIA2pTo2JLWWcHibOqmnoFd4gpPxAuc0AQo9lvIftn4NtQP4JNkPcy5iiE+toGmX5zWotOsYfrbkQjjhkEhS58X6DR8o9ATow6VAsqD8LoQiY9EqlTL8="
   skip_cleanup: true
   on:
     tags: true
