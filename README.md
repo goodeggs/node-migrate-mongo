@@ -38,7 +38,8 @@ Your Migratefile file can be any JavaScript variant recognized by [interpret](ht
 * **before** -- An async function called before running a command.  Useful for connecting your app to its database.
 * **after** -- An async function called after running a command.
 * **afterTest** -- An async function called after running a migration test.
-* **mongo** -- A string or function that returns a mongo connection string.
+* **mongo.url** -- (required) A MongoDB connection string.
+* **mongo.options** -- An options object passed to the MongoDB client connection.
 * **model** -- A reference to your custom `MigrationVersion` model.
 * **path** -- The place to store your migration files.  Defaults to `migrations`.
 * **ext** -- The extension for your migration files.  Defaults to `coffee`.

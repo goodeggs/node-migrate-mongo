@@ -21,8 +21,12 @@ module.exports = class MongoStore
 
   model: ->
     @_model ?= do =>
-      @opts.mongo = @opts.mongo() if typeof @opts.mongo is 'function'
-      connection = mongoose.createConnection @opts.mongo
+      if typeof @opts.mongo isnt 'object'
+        throw new Error('`mongo` Migratefile option must now be an object {url, options}')
+      {url, options} = @opts.mongo
+      if not url?
+        throw new Error('`mongo.url` Migratefile option is required')
+      connection = mongoose.createConnection(url, options)
 
       schema = new mongoose.Schema
         name:  type: String, index: true, unique: true, required: true
